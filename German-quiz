@@ -1,0 +1,594 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Article Quiz Master | اختبار أدوات التعريف الكامل</title>
+    <style>
+        :root {
+            --primary-green: #0d7a5f;
+            --primary-hover: #0a5c48;
+            --bg-light: #fdfdfd;
+            --sidebar-bg: #f4fcf9;
+            --border-color: #e2e8f0;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            
+            --correct-bg: #e6f7f0;
+            --correct-border: #0d7a5f;
+            --wrong-bg: #fdf2f2;
+            --wrong-border: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .quiz-wrapper {
+            background: #ffffff;
+            width: 100%;
+            max-width: 1050px;
+            min-height: 650px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.03);
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .main-pane {
+            padding: 50px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .instruction-text {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 40px;
+            line-height: 1.3;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .option-item {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .option-item:hover:not(.locked) {
+            border-color: #cbd5e1;
+            background-color: #f8fafc;
+        }
+
+        .option-letter {
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            margin-right: 20px;
+            transition: all 0.2s;
+        }
+
+        .option-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .option-item.selected {
+            border-color: #94a3b8;
+            background-color: #f8fafc;
+        }
+        .option-item.selected .option-letter {
+            background-color: #e2e8f0;
+            color: var(--text-dark);
+        }
+
+        .option-item.correct {
+            background-color: var(--correct-bg) !important;
+            border-color: var(--correct-border) !important;
+        }
+        .option-item.correct .option-letter {
+            background-color: var(--primary-green) !important;
+            color: white !important;
+        }
+        .option-item.correct::after {
+            content: "✔";
+            position: absolute;
+            right: 24px;
+            color: var(--primary-green);
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .option-item.wrong {
+            background-color: var(--wrong-bg) !important;
+            border-color: var(--wrong-border) !important;
+        }
+        .option-item.wrong .option-letter {
+            background-color: var(--wrong-border) !important;
+            color: white !important;
+        }
+
+        .action-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            background-color: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 32px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .action-btn:disabled {
+            background-color: #cbd5e1;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .secondary-btn {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        .secondary-btn:hover {
+            background-color: #e2e8f0;
+        }
+
+        .sidebar-pane {
+            background-color: var(--sidebar-bg);
+            border-left: 1px solid var(--border-color);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            max-height: 100%;
+        }
+
+        .timer-module {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary-green) 0deg, #e2e8f0 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .timer-circle::before {
+            content: "";
+            position: absolute;
+            width: 78px;
+            height: 78px;
+            background-color: var(--sidebar-bg);
+            border-radius: 50%;
+        }
+
+        .timer-text {
+            position: relative;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .timer-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .list-module {
+            display: flex;
+            flex-direction: column;
+            height: 380px;
+        }
+
+        .list-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .question-items-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 4px;
+        }
+
+        .sidebar-item {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            scroll-margin-top: 10px;
+        }
+
+        .sidebar-item.current {
+            background-color: #e6f4f0;
+            border-color: rgba(13, 122, 95, 0.2);
+            color: var(--primary-green);
+        }
+
+        .sidebar-item.passed::after {
+            content: "●";
+            color: var(--primary-green);
+            font-size: 10px;
+        }
+
+        .question-items-box::-webkit-scrollbar { width: 5px; }
+        .question-items-box::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .results-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            z-index: 10;
+            padding: 60px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .results-score {
+            font-size: 64px;
+            font-weight: 900;
+            color: var(--primary-green);
+            margin: 20px 0;
+        }
+
+        @media (max-width: 850px) {
+            .quiz-wrapper {
+                grid-template-columns: 1fr;
+            }
+            .sidebar-pane {
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+            }
+            .main-pane {
+                padding: 40px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-wrapper">
+        
+        <div class="main-pane">
+            <div class="results-overlay" id="resultsBlock">
+                <h1 style="font-size: 32px; font-weight: 800;">Quiz Finished! 🎉</h1>
+                <div class="results-score" id="finalScoreText">0 / 0</div>
+                <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 16px;">You evaluated all words across the textbook dataset sheet.</p>
+                <button class="action-btn" onclick="startQuizEngine()">Restart Quiz</button>
+            </div>
+
+            <div>
+                <div class="instruction-text" id="promptText">
+                    Find the correct article (der, die, or das) for:<br>
+                    <span style="color: var(--primary-green); font-size: 36px; font-weight: 800;" id="deWord">-</span> 
+                    <span style="color: var(--text-muted); font-size: 22px; font-weight: 500; margin-left:10px;" id="arWord">(-)</span>
+                </div>
+
+                <div class="options-list">
+                    <div class="option-item" id="opt-der" onclick="selectOption('der')">
+                        <div class="option-letter">A</div>
+                        <div class="option-text">der</div>
+                    </div>
+                    <div class="option-item" id="opt-das" onclick="selectOption('das')">
+                        <div class="option-letter">B</div>
+                        <div class="option-text">das</div>
+                    </div>
+                    <div class="option-item" id="opt-die" onclick="selectOption('die')">
+                        <div class="option-letter">C</div>
+                        <div class="option-text">die</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-container">
+                <button class="action-btn" id="submitBtn" onclick="evaluateSelection()" disabled>Submit Answer</button>
+                <button class="action-btn secondary-btn" id="nextBtn" onclick="loadNextQuestion()" style="display: none;">Next Word</button>
+            </div>
+        </div>
+
+        <div class="sidebar-pane">
+            <div class="timer-module">
+                <div class="timer-circle" id="timerCircle">
+                    <div class="timer-text" id="timerValue">20</div>
+                </div>
+                <div class="timer-label">Seconds Remaining</div>
+            </div>
+
+            <div class="list-module">
+                <div class="list-title">
+                    <span>Quiz Questions List</span>
+                    <span id="numericProgress">0/52</span>
+                </div>
+                <div class="question-items-box" id="sidebarItemsContainer">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const vocabularyPool = [
+            { word: "Markt", translation: "سوق", article: "der" },
+            { word: "Supermarkt", translation: "سوبر ماركت", article: "der" },
+            { word: "Apfel", translation: "تفاحة", article: "der" },
+            { word: "Erdapfel", translation: "بطاطس", article: "der" },
+            { word: "Zucker", translation: "سكر", article: "der" },
+            { word: "Korb", translation: "سلة", article: "der" },
+            { word: "Kuchen", translation: "جاتوه", article: "der" },
+            { word: "Fisch", translation: "سمك", article: "der" },
+            { word: "Kaffee", translation: "قهوة", article: "der" },
+            { word: "Käse", translation: "جبنة", article: "der" },
+            { word: "Tee", translation: "شاي", article: "der" },
+            { word: "Reis", translation: "رز", article: "der" },
+            { word: "Saft", translation: "عصير", article: "der" },
+            { word: "Becher", translation: "علبة زبادي", article: "der" },
+            { word: "Euro", translation: "يورو", article: "der" },
+            { word: "Preis", translation: "سعر", article: "der" },
+            { word: "Prospekt", translation: "منشور", article: "der" },
+            { word: "Salat", translation: "سلطة", article: "der" },
+            { word: "Apfelessig", translation: "خل التفاح", article: "der" },
+            { word: "Joghurt", translation: "زبادي", article: "der" },
+            { word: "Löffel", translation: "ملعقة", article: "der" },
+            { word: "Liter", translation: "لتر", article: "der" },
+            { word: "Durst", translation: "عطش", article: "der" },
+            { word: "Hunger", translation: "جوع", article: "der" },
+            { word: "Einkauf", translation: "تسوق", article: "der" },
+            { word: "Brot (-e)", translation: "عيش", article: "das" },
+            { word: "Brötchen", translation: "رغيف", article: "das" },
+            { word: "Lebensmittel", translation: "مواد غذائية", article: "das" },
+            { word: "Fleisch", translation: "لحمة", article: "das" },
+            { word: "Lieblingsessen", translation: "أكلة مفضلة", article: "das" },
+            { word: "Rindfleisch", translation: "لحمة بقرى", article: "das" },
+            { word: "Sonderangebot (-e)", translation: "اوكازيون", article: "das" },
+            { word: "Restaurant (-s)", translation: "مطعم", article: "das" },
+            { word: "Steak (-s)", translation: "شريحة", article: "das" },
+            { word: "Getränk (-e)", translation: "مشروب", article: "das" },
+            { word: "Obst", translation: "فاكهة", article: "das" },
+            { word: "Pfund (-e)", translation: "رطل / جنيه", article: "das" },
+            { word: "Hähnchen", translation: "فرخة", article: "das" },
+            { word: "Eis", translation: "ايس كريم", article: "das" },
+            { word: "Trinken / Essen", translation: "طعام / شرب", article: "das" },
+            { word: "Glas (-..er)", translation: "كوب", article: "das" },
+            { word: "Wasser", translation: "مياة", article: "das" },
+            { word: "Mineralwasser", translation: "مياة معدنية", article: "das" },
+            { word: "Kilo (-s)", translation: "كيلو", article: "das" },
+            { word: "Ei (-er)", translation: "بيضة", article: "das" },
+            { word: "Lieblingsgetränk", translation: "مشروب مفضل", article: "das" },
+            { word: "Öl (-s)", translation: "زيت", article: "das" },
+            { word: "Gemüse", translation: "خضار", article: "das" },
+            { word: "Stück", translation: "قطعة", article: "das" },
+            { word: "Rippchen", translation: "قطع لحم ضلوع", article: "das" },
+            { word: "Kartoffel (-n)", translation: "بطاطس", article: "die" },
+            { word: "Banane (-n)", translation: "موز", article: "die" },
+            { word: "Birne (-n)", translation: "جوافة", article: "die" },
+            { word: "Orange (-n)", translation: "برتقالة", article: "die" },
+            { word: "Tomate (-n)", translation: "طماطم", article: "die" },
+            { word: "Kiwi", translation: "كيوي", article: "die" },
+            { word: "Wurst", translation: "سجق", article: "die" },
+            { word: "Butter", translation: "زبدة", article: "die" },
+            { word: "Traube", translation: "عنب", article: "die" },
+            { word: "Liste", translation: "قائمة", article: "die" },
+            { word: "Schüssel", translation: "صحن", article: "die" },
+            { word: "Milch", translation: "لبن", article: "die" },
+            { word: "Mensa", translation: "كافيتريا الجامعة", article: "die" },
+            { word: "Tomatensoße", translation: "عصير طماطم", article: "die" },
+            { word: "Pause", translation: "فسحة", article: "die" },
+            { word: "Gurke", translation: "خيار", article: "die" },
+            { word: "Frikadelle", translation: "كفتة", article: "die" },
+            { word: "Schokolade", translation: "شيكولاتة", article: "die" },
+            { word: "Packung", translation: "عبوة", article: "die" },
+            { word: "Dose", translation: "دستة", article: "die" },
+            { word: "Flasche", translation: "زجاجة", article: "die" },
+            { word: "Zwiebel", translation: "بصل", article: "die" },
+            { word: "Sahne", translation: "قشدة", article: "die" },
+            { word: "Brotzeit", translation: "وجبة", article: "die" },
+            { word: "Pizza", translation: "بيتزا", article: "die" },
+            { word: "Suppe", translation: "شوربة", article: "die" },
+            { word: "Speisekarte", translation: "قائمة الطعام", article: "die" }
+        ];
+
+        let quizSet = [];
+        let currentIndex = 0;
+        let selectedValue = null;
+        let score = 0;
+        let countdownValue = 20;
+        let timerIntervalId = null;
+
+        function startQuizEngine() {
+            quizSet = [...vocabularyPool].sort(() => Math.random() - 0.5);
+            currentIndex = 0;
+            score = 0;
+            document.getElementById('resultsBlock').style.display = 'none';
+            
+            buildSidebarListUI();
+            displayQuestionItem();
+        }
+
+        function buildSidebarListUI() {
+            const container = document.getElementById('sidebarItemsContainer');
+            container.innerHTML = '';
+            
+            quizSet.forEach((item, index) => {
+                const element = document.createElement('div');
+                element.className = 'sidebar-item';
+                element.id = `sidebar-item-${index}`;
+                element.innerHTML = `<span>Quiz question ${index + 1}</span>`;
+                container.appendChild(element);
+            });
+            document.getElementById('numericProgress').innerText = `0/${quizSet.length}`;
+        }
+
+        function displayQuestionItem() {
+            selectedValue = null;
+            countdownValue = 20; // Explicitly resets clock variables back to full status
+            
+            document.getElementById('submitBtn').style.display = 'inline-flex';
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('nextBtn').style.display = 'none';
+
+            quizSet.forEach((_, idx) => {
+                const row = document.getElementById(`sidebar-item-${idx}`);
+                if(row) {
+                    row.className = 'sidebar-item' + (idx < currentIndex ? ' passed' : '') + (idx === currentIndex ? ' current' : '');
+                    if (idx === currentIndex) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            });
+
+            const activeItem = quizSet[currentIndex];
+            document.getElementById('deWord').innerText = activeItem.word;
+            document.getElementById('arWord').innerText = `(${activeItem.translation})`;
+
+            // Completely removes class modifiers (correct, wrong, locked, selected) from choice items
+            const cards = document.querySelectorAll('.option-item');
+            cards.forEach(card => {
+                card.className = 'option-item';
+            });
+
+            runTimerCountdown(); // Instantly initiates the newly wiped timer loop tracker loop
+        }
+
+        function runTimerCountdown() {
+            clearInterval(timerIntervalId); // Kill prior hanging interval timers safely
+            updateTimerGraphic();
+            
+            timerIntervalId = setInterval(() => {
+                countdownValue--;
+                updateTimerGraphic();
+                
+                if (countdownValue <= 0) {
+                    clearInterval(timerIntervalId);
+                    evaluateSelection(); // Forces instant checking loop if timer expires
+                }
+            }, 1000);
+        }
+
+        function updateTimerGraphic() {
+            document.getElementById('timerValue').innerText = countdownValue;
+            const computedDegreeValue = (countdownValue / 20) * 360;
+            document.getElementById('timerCircle').style.background = `conic-gradient(var(--primary-green) ${computedDegreeValue}deg, #e2e8f0 0deg)`;
+        }
+
+        function selectOption(choice) {
+            if (document.getElementById('submitBtn').style.display === 'none') return;
+
+            selectedValue = choice;
+            document.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
+            document.getElementById(`opt-${choice}`).classList.add('selected');
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function evaluateSelection() {
+            clearInterval(timerIntervalId); // Safely halts active countdown loop immediately
+            const activeItem = quizSet[currentIndex];
+
+            document.querySelectorAll('.option-item').forEach(item => item.classList.add('locked'));
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-flex';
+
+            if (selectedValue === activeItem.article) {
+                score++;
+            } else if (selectedValue !== null) {
+                document.getElementById(`opt-${selectedValue}`).classList.add('wrong');
+            }
+
+            document.getElementById(`opt-${activeItem.article}`).classList.add('correct');
+            document.getElementById('numericProgress').innerText = `${currentIndex + 1}/${quizSet.length}`;
+        }
+
+        function loadNextQuestion() {
+            currentIndex++;
+            if (currentIndex < quizSet.length) {
+                displayQuestionItem();
+            } else {
+                document.getElementById('resultsBlock').style.display = 'flex';
+                document.getElementById('finalScoreText').innerText = `${score} / ${quizSet.length}`;
+            }
+        }
+
+        window.onload = startQuizEngine;
+    </script>
+</body>
+</html>
